@@ -54,6 +54,15 @@
   const editSubjectForm = document.getElementById('editSubjectForm');
   const editSubjectNameInput = document.getElementById('editSubjectNameInput');
   const editNameErrorMsg = document.getElementById('editNameErrorMsg');
+  const editAttendedInput = document.getElementById('editAttendedInput');
+  const editConductedInput = document.getElementById('editConductedInput');
+  const editModalAttendedMinus = document.getElementById('editModalAttendedMinus');
+  const editModalAttendedPlus = document.getElementById('editModalAttendedPlus');
+  const editModalConductedMinus = document.getElementById('editModalConductedMinus');
+  const editModalConductedPlus = document.getElementById('editModalConductedPlus');
+  const editAttendedErrorMsg = document.getElementById('editAttendedErrorMsg');
+  const editConductedErrorMsg = document.getElementById('editConductedErrorMsg');
+  const editFormGeneralError = document.getElementById('editFormGeneralError');
 
   // Error Message Elements
   const nameErrorMsg = document.getElementById('nameErrorMsg');
@@ -357,9 +366,8 @@
                 class="btn-plus btn-attended-plus" 
                 data-action="increment-attended" 
                 data-id="${subject.id}"
-                ${isAttendedMaxed ? 'disabled' : ''}
-                title="${isAttendedMaxed ? 'Attended cannot exceed Conducted' : 'Increase attended by 1'}"
-                aria-label="Increase attended classes for ${escapeHtml(subject.name)}"
+                title="Attended class (+1 attended, +1 conducted automatically)"
+                aria-label="Mark class attended for ${escapeHtml(subject.name)}"
               >
                 +
               </button>
@@ -376,8 +384,8 @@
                 class="btn-plus btn-conducted-plus" 
                 data-action="increment-conducted" 
                 data-id="${subject.id}"
-                title="Increase conducted by 1"
-                aria-label="Increase conducted classes for ${escapeHtml(subject.name)}"
+                title="Skipped class (+1 conducted only)"
+                aria-label="Mark class skipped for ${escapeHtml(subject.name)}"
               >
                 +
               </button>
@@ -439,19 +447,18 @@
     if (!subject) return;
 
     if (action === 'increment-attended') {
-      // Attended cannot exceed Conducted
-      if (subject.attended < subject.conducted) {
-        subject.attended += 1;
-        saveData();
-        updateDashboard();
-      }
+      // Attending a class increases BOTH attended and conducted by 1
+      subject.attended += 1;
+      subject.conducted += 1;
+      saveData();
+      updateDashboard();
     } else if (action === 'increment-conducted') {
-      // Conducted increases, attended remains unchanged
+      // Skipping a class increases ONLY conducted by 1
       subject.conducted += 1;
       saveData();
       updateDashboard();
     } else if (action === 'edit') {
-      openEditModal(subject.id, subject.name);
+      openEditModal(subject);
     } else if (action === 'delete') {
       openDeleteModal(subject.id, subject.name);
     }
@@ -615,14 +622,15 @@
   closeDeleteModalBtn.addEventListener('click', closeDeleteModal);
 
   /* ==========================================================================
-     EDIT SUBJECT NAME MODAL & VALIDATION
+     EDIT SUBJECT DETAILS MODAL & VALIDATION (Name, Attended, Conducted)
      ========================================================================== */
 
-  function openEditModal(id, currentName) {
-    subjectToEditId = id;
-    editSubjectNameInput.value = currentName;
-    editNameErrorMsg.textContent = '';
-    editSubjectNameInput.style.borderColor = '';
+  function openEditModal(subject) {
+    subjectToEditId = subject.id;
+    editSubjectNameInput.value = subject.name;
+    editAttendedInput.value = subject.attended;
+    editConductedInput.value = subject.conducted;
+    clearEditModalErrors();
     editSubjectModal.removeAttribute('hidden');
     editSubjectNameInput.focus();
     editSubjectNameInput.select();
@@ -631,34 +639,101 @@
   function closeEditModal() {
     editSubjectModal.setAttribute('hidden', '');
     subjectToEditId = null;
-    editNameErrorMsg.textContent = '';
-    editSubjectNameInput.style.borderColor = '';
+    clearEditModalErrors();
   }
+
+  function clearEditModalErrors() {
+    editNameErrorMsg.textContent = '';
+    editAttendedErrorMsg.textContent = '';
+    editConductedErrorMsg.textContent = '';
+    editFormGeneralError.textContent = '';
+    editFormGeneralError.classList.remove('visible');
+    editSubjectNameInput.style.borderColor = '';
+    editAttendedInput.style.borderColor = '';
+    editConductedInput.style.borderColor = '';
+  }
+
+  // Counter Steppers in Edit Modal
+  editModalAttendedMinus.addEventListener('click', () => {
+    let val = parseInt(editAttendedInput.value, 10) || 0;
+    if (val > 0) editAttendedInput.value = val - 1;
+    clearEditModalErrors();
+  });
+
+  editModalAttendedPlus.addEventListener('click', () => {
+    let val = parseInt(editAttendedInput.value, 10) || 0;
+    editAttendedInput.value = val + 1;
+    clearEditModalErrors();
+  });
+
+  editModalConductedMinus.addEventListener('click', () => {
+    let val = parseInt(editConductedInput.value, 10) || 0;
+    if (val > 0) editConductedInput.value = val - 1;
+    clearEditModalErrors();
+  });
+
+  editModalConductedPlus.addEventListener('click', () => {
+    let val = parseInt(editConductedInput.value, 10) || 0;
+    editConductedInput.value = val + 1;
+    clearEditModalErrors();
+  });
 
   editSubjectForm.addEventListener('submit', function (e) {
     e.preventDefault();
-    editNameErrorMsg.textContent = '';
-    editSubjectNameInput.style.borderColor = '';
+    clearEditModalErrors();
 
     const newName = editSubjectNameInput.value.trim();
+    const attendedRaw = editAttendedInput.value.trim();
+    const conductedRaw = editConductedInput.value.trim();
 
+    let hasError = false;
+
+    // 1. Validate Subject Name
     if (!newName) {
       editNameErrorMsg.textContent = 'Subject name cannot be empty.';
       editSubjectNameInput.style.borderColor = 'var(--danger-color)';
-      return;
+      hasError = true;
+    } else {
+      // Check for duplicate names across other subjects (case-insensitive)
+      const duplicate = subjects.some(s => s.id !== subjectToEditId && s.name.toLowerCase() === newName.toLowerCase());
+      if (duplicate) {
+        editNameErrorMsg.textContent = 'Another subject with this name already exists.';
+        editSubjectNameInput.style.borderColor = 'var(--danger-color)';
+        hasError = true;
+      }
     }
 
-    // Check for duplicate names across other subjects (case-insensitive)
-    const duplicate = subjects.some(s => s.id !== subjectToEditId && s.name.toLowerCase() === newName.toLowerCase());
-    if (duplicate) {
-      editNameErrorMsg.textContent = 'Another subject with this name already exists.';
-      editSubjectNameInput.style.borderColor = 'var(--danger-color)';
-      return;
+    // 2. Validate Attended
+    const newAttended = parseInt(attendedRaw, 10);
+    if (attendedRaw === '' || isNaN(newAttended) || newAttended < 0) {
+      editAttendedErrorMsg.textContent = 'Enter a valid non-negative number.';
+      editAttendedInput.style.borderColor = 'var(--danger-color)';
+      hasError = true;
     }
+
+    // 3. Validate Conducted
+    const newConducted = parseInt(conductedRaw, 10);
+    if (conductedRaw === '' || isNaN(newConducted) || newConducted < 0) {
+      editConductedErrorMsg.textContent = 'Enter a valid non-negative number.';
+      editConductedInput.style.borderColor = 'var(--danger-color)';
+      hasError = true;
+    }
+
+    // 4. Validate Attended <= Conducted
+    if (!hasError && newAttended > newConducted) {
+      editFormGeneralError.textContent = 'Classes Attended cannot exceed Classes Conducted.';
+      editFormGeneralError.classList.add('visible');
+      editAttendedInput.style.borderColor = 'var(--danger-color)';
+      hasError = true;
+    }
+
+    if (hasError) return;
 
     const targetSubject = subjects.find(s => s.id === subjectToEditId);
     if (targetSubject) {
       targetSubject.name = newName;
+      targetSubject.attended = newAttended;
+      targetSubject.conducted = newConducted;
       saveData();
       updateDashboard();
       closeEditModal();

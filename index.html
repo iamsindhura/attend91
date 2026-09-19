@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AttendSafe — Smart Attendance Tracker</title>
+  <title>Attend91 — Smart Attendance Tracker</title>
   <meta name="description" content="Smart college attendance tracker to calculate exact safe skips while keeping attendance strictly above 91%.">
   
   <!-- Favicon -->
@@ -30,7 +30,7 @@
         <span class="pulse-dot"></span>
         <span>Target: Strictly Above 91%</span>
       </div>
-      <h1 class="brand-title">AttendSafe</h1>
+      <h1 class="brand-title">Attend91</h1>
       <p class="brand-subtitle">Smart Attendance Tracker</p>
     </header>
 
@@ -39,7 +39,7 @@
       <div class="guide-icon" aria-hidden="true">💡</div>
       <div class="guide-content">
         <strong>Quick Attendance Guide:</strong>
-        <span>Attended a class? Click <strong>Attended [+]</strong> and <strong>Conducted [+]</strong>. Skipped a class? Click <strong>Conducted [+]</strong> only.</span>
+        <span>Attended a class? Click <strong>Attended [+]</strong> (Conducted automatically increases by 1). Skipped a class? Click <strong>Conducted [+]</strong> only. Click <strong>✏️</strong> to manually change numbers anytime.</span>
       </div>
     </section>
 
@@ -114,7 +114,7 @@
 
     <!-- Footer -->
     <footer class="app-footer">
-      <p>AttendSafe &bull; Strictly Above 91% Attendance Rule Applied &bull; Data saved locally in browser</p>
+      <p>Attend91 &bull; Strictly Above 91% Attendance Rule Applied &bull; Data saved locally in browser</p>
     </footer>
   </div>
 
@@ -195,25 +195,69 @@
 
   <!-- Edit Subject Modal -->
   <div class="modal-backdrop" id="editSubjectModal" role="dialog" aria-modal="true" aria-labelledby="editModalTitle" hidden>
-    <div class="modal-card modal-card-sm">
+    <div class="modal-card">
       <div class="modal-header">
-        <h3 class="modal-title" id="editModalTitle">Edit Subject Name</h3>
+        <h3 class="modal-title" id="editModalTitle">Edit Subject Details</h3>
         <button class="btn-close-modal" id="closeEditModalBtn" aria-label="Close dialog">&times;</button>
       </div>
       <form id="editSubjectForm" novalidate>
+        <!-- Subject Name Input -->
         <div class="form-group">
           <label for="editSubjectNameInput" class="form-label">Subject Name <span class="required-star">*</span></label>
           <input 
             type="text" 
             id="editSubjectNameInput" 
             class="form-input" 
-            placeholder="e.g., Advanced Database Systems" 
+            placeholder="e.g., Embedded Systems" 
             autocomplete="off" 
             maxlength="60"
             required
           >
           <div class="form-error-msg" id="editNameErrorMsg"></div>
         </div>
+
+        <!-- Attendance Numbers Group -->
+        <div class="form-row">
+          <!-- Edit Classes Attended -->
+          <div class="form-group">
+            <label for="editAttendedInput" class="form-label">Classes Attended <span class="required-star">*</span></label>
+            <div class="counter-input-wrap">
+              <button type="button" class="btn-counter-ctrl" id="editModalAttendedMinus" aria-label="Decrease attended by 1">-</button>
+              <input 
+                type="number" 
+                id="editAttendedInput" 
+                class="form-input counter-input" 
+                value="0" 
+                min="0" 
+                step="1"
+                required
+              >
+              <button type="button" class="btn-counter-ctrl" id="editModalAttendedPlus" aria-label="Increase attended by 1">+</button>
+            </div>
+            <div class="form-error-msg" id="editAttendedErrorMsg"></div>
+          </div>
+
+          <!-- Edit Classes Conducted -->
+          <div class="form-group">
+            <label for="editConductedInput" class="form-label">Classes Conducted <span class="required-star">*</span></label>
+            <div class="counter-input-wrap">
+              <button type="button" class="btn-counter-ctrl" id="editModalConductedMinus" aria-label="Decrease conducted by 1">-</button>
+              <input 
+                type="number" 
+                id="editConductedInput" 
+                class="form-input counter-input" 
+                value="0" 
+                min="0" 
+                step="1"
+                required
+              >
+              <button type="button" class="btn-counter-ctrl" id="editModalConductedPlus" aria-label="Increase conducted by 1">+</button>
+            </div>
+            <div class="form-error-msg" id="editConductedErrorMsg"></div>
+          </div>
+        </div>
+
+        <div class="form-general-error" id="editFormGeneralError" role="alert"></div>
 
         <div class="modal-actions">
           <button type="button" class="btn btn-secondary" id="cancelEditModalBtn">Cancel</button>
