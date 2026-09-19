@@ -724,14 +724,17 @@ body {
   color: var(--text-primary);
 }
 
-.btn-plus {
-  width: 44px;
-  height: 44px;
+.counter-btn-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-ctrl {
+  width: 40px;
+  height: 40px;
   border-radius: var(--radius-md);
-  border: 1px solid rgba(99, 102, 241, 0.35);
-  background: rgba(99, 102, 241, 0.15);
-  color: #A5B4FC;
-  font-size: 1.3rem;
+  font-size: 1.25rem;
   font-weight: 700;
   display: flex;
   align-items: center;
@@ -739,6 +742,30 @@ body {
   cursor: pointer;
   transition: all var(--transition-fast);
   touch-action: manipulation;
+  user-select: none;
+}
+
+.btn-minus {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-secondary);
+}
+
+.btn-minus:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: rgba(239, 68, 68, 0.4);
+  color: #FCA5A5;
+  transform: scale(1.05);
+}
+
+.btn-minus:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+.btn-plus {
+  border: 1px solid rgba(99, 102, 241, 0.35);
+  background: rgba(99, 102, 241, 0.15);
+  color: #A5B4FC;
 }
 
 .btn-plus:hover:not(:disabled) {
@@ -753,12 +780,14 @@ body {
   transform: scale(0.95);
 }
 
-.btn-plus:disabled {
-  opacity: 0.3;
+.btn-ctrl:disabled {
+  opacity: 0.25;
   cursor: not-allowed;
   border-color: var(--border-subtle);
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(255, 255, 255, 0.02);
   color: var(--text-muted);
+  box-shadow: none;
+  transform: none;
 }
 
 /* Subject Card Footer / Target & Safe Skip */

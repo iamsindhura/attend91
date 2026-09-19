@@ -361,16 +361,29 @@
                 <span class="counter-label">Classes Attended</span>
                 <span class="counter-count">${subject.attended}</span>
               </div>
-              <button 
-                type="button" 
-                class="btn-plus btn-attended-plus" 
-                data-action="increment-attended" 
-                data-id="${subject.id}"
-                title="Attended class (+1 attended, +1 conducted automatically)"
-                aria-label="Mark class attended for ${escapeHtml(subject.name)}"
-              >
-                +
-              </button>
+              <div class="counter-btn-group">
+                <button 
+                  type="button" 
+                  class="btn-ctrl btn-minus btn-attended-minus" 
+                  data-action="decrement-attended" 
+                  data-id="${subject.id}"
+                  ${subject.attended === 0 ? 'disabled' : ''}
+                  title="Undo attended class (-1 attended, -1 conducted)"
+                  aria-label="Decrease attended classes for ${escapeHtml(subject.name)}"
+                >
+                  -
+                </button>
+                <button 
+                  type="button" 
+                  class="btn-ctrl btn-plus btn-attended-plus" 
+                  data-action="increment-attended" 
+                  data-id="${subject.id}"
+                  title="Attended class (+1 attended, +1 conducted)"
+                  aria-label="Increase attended classes for ${escapeHtml(subject.name)}"
+                >
+                  +
+                </button>
+              </div>
             </div>
 
             <!-- Classes Conducted Row -->
@@ -379,16 +392,29 @@
                 <span class="counter-label">Classes Conducted</span>
                 <span class="counter-count">${subject.conducted}</span>
               </div>
-              <button 
-                type="button" 
-                class="btn-plus btn-conducted-plus" 
-                data-action="increment-conducted" 
-                data-id="${subject.id}"
-                title="Skipped class (+1 conducted only)"
-                aria-label="Mark class skipped for ${escapeHtml(subject.name)}"
-              >
-                +
-              </button>
+              <div class="counter-btn-group">
+                <button 
+                  type="button" 
+                  class="btn-ctrl btn-minus btn-conducted-minus" 
+                  data-action="decrement-conducted" 
+                  data-id="${subject.id}"
+                  ${subject.conducted <= subject.attended ? 'disabled' : ''}
+                  title="${subject.conducted <= subject.attended ? 'Conducted cannot be less than Attended' : 'Undo skipped class (-1 conducted only)'}"
+                  aria-label="Decrease conducted classes for ${escapeHtml(subject.name)}"
+                >
+                  -
+                </button>
+                <button 
+                  type="button" 
+                  class="btn-ctrl btn-plus btn-conducted-plus" 
+                  data-action="increment-conducted" 
+                  data-id="${subject.id}"
+                  title="Skipped class (+1 conducted only)"
+                  aria-label="Increase conducted classes for ${escapeHtml(subject.name)}"
+                >
+                  +
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -431,7 +457,7 @@
   }
 
   /* ==========================================================================
-     INTERACTIONS & PLUS BUTTON HANDLERS
+     INTERACTIONS & PLUS/MINUS BUTTON HANDLERS
      ========================================================================== */
 
   // Event Delegation for Subject Card Buttons
@@ -452,11 +478,26 @@
       subject.conducted += 1;
       saveData();
       updateDashboard();
+    } else if (action === 'decrement-attended') {
+      // Undoing attended class decreases both attended and conducted by 1
+      if (subject.attended > 0 && subject.conducted > 0) {
+        subject.attended -= 1;
+        subject.conducted -= 1;
+        saveData();
+        updateDashboard();
+      }
     } else if (action === 'increment-conducted') {
       // Skipping a class increases ONLY conducted by 1
       subject.conducted += 1;
       saveData();
       updateDashboard();
+    } else if (action === 'decrement-conducted') {
+      // Undoing skipped class decreases conducted by 1 (only if conducted > attended)
+      if (subject.conducted > subject.attended) {
+        subject.conducted -= 1;
+        saveData();
+        updateDashboard();
+      }
     } else if (action === 'edit') {
       openEditModal(subject);
     } else if (action === 'delete') {
