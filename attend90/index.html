@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AttendSafe — Smart Attendance Tracker</title>
+  <meta name="description" content="Smart college attendance tracker to calculate exact safe skips while keeping attendance strictly above 91%.">
+  
+  <!-- Favicon -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛡️</text></svg>">
+  
+  <!-- Google Fonts for Modern Premium Typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Background Glow Accents -->
+  <div class="bg-glow-container" aria-hidden="true">
+    <div class="glow-orb glow-top-left"></div>
+    <div class="glow-orb glow-top-right"></div>
+  </div>
+
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="header-badge">
+        <span class="pulse-dot"></span>
+        <span>Target: Strictly Above 91%</span>
+      </div>
+      <h1 class="brand-title">AttendSafe</h1>
+      <p class="brand-subtitle">Smart Attendance Tracker</p>
+    </header>
+
+    <!-- Quick Instruction Banner -->
+    <section class="quick-guide-banner" aria-label="Usage guide">
+      <div class="guide-icon" aria-hidden="true">💡</div>
+      <div class="guide-content">
+        <strong>Quick Attendance Guide:</strong>
+        <span>Attended a class? Click <strong>Attended [+]</strong> and <strong>Conducted [+]</strong>. Skipped a class? Click <strong>Conducted [+]</strong> only.</span>
+      </div>
+    </section>
+
+    <!-- Overall Attendance Card -->
+    <section class="overall-card" id="overallCard" aria-labelledby="overall-heading">
+      <div class="overall-header">
+        <span class="section-label" id="overall-heading">OVERALL ATTENDANCE</span>
+        <div class="target-badge">Target: Above 91%</div>
+      </div>
+
+      <div class="overall-hero">
+        <div class="percentage-display" id="overallPercentage" aria-label="Overall attendance percentage">--%</div>
+        <div class="status-badge status-neutral" id="overallStatus" aria-label="Overall attendance status">
+          <span class="status-icon">⚪</span>
+          <span class="status-text">No Data</span>
+        </div>
+      </div>
+
+      <!-- Overall Metrics Grid -->
+      <div class="overall-metrics">
+        <div class="metric-item">
+          <span class="metric-label">Total Attended</span>
+          <span class="metric-value" id="overallAttended">0</span>
+        </div>
+        <div class="metric-divider" aria-hidden="true">/</div>
+        <div class="metric-item">
+          <span class="metric-label">Total Conducted</span>
+          <span class="metric-value" id="overallConducted">0</span>
+        </div>
+      </div>
+
+      <!-- Overall Safe Skip Callout -->
+      <div class="overall-skip-box" id="overallSkipContainer">
+        <div class="skip-icon-col" aria-hidden="true">
+          <span class="skip-badge-icon">🛡️</span>
+        </div>
+        <div class="skip-info-col">
+          <span class="skip-title">Overall Can Skip</span>
+          <span class="skip-count-text" id="overallCanSkip">--</span>
+          <span class="skip-subtext">Future classes skippable across all subjects while keeping total attendance &gt; 91%</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Controls Bar -->
+    <div class="action-bar">
+      <div class="action-title-group">
+        <h2 class="section-title">Subjects</h2>
+        <span class="subject-counter-pill" id="subjectCountPill">0 subjects</span>
+      </div>
+      <button class="btn btn-primary btn-add-subject" id="openAddSubjectBtn" aria-haspopup="dialog">
+        <span class="btn-icon" aria-hidden="true">+</span>
+        <span>Add Subject</span>
+      </button>
+    </div>
+
+    <!-- Subjects Container -->
+    <main class="subjects-section" id="subjectsSection">
+      <!-- Empty State -->
+      <div class="empty-state" id="emptyState">
+        <div class="empty-illustration" aria-hidden="true">📚</div>
+        <h3 class="empty-title">No subjects added yet</h3>
+        <p class="empty-description">Add your first subject to start tracking attendance and calculating your safe skip buffer.</p>
+        <button class="btn btn-secondary btn-empty-action" id="emptyAddBtn">
+          + Add First Subject
+        </button>
+      </div>
+
+      <!-- Grid of Subject Cards -->
+      <div class="subjects-grid" id="subjectsGrid" aria-live="polite"></div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+      <p>AttendSafe &bull; Strictly Above 91% Attendance Rule Applied &bull; Data saved locally in browser</p>
+    </footer>
+  </div>
+
+  <!-- Add Subject Modal -->
+  <div class="modal-backdrop" id="addSubjectModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle" hidden>
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title" id="modalTitle">Add New Subject</h3>
+        <button class="btn-close-modal" id="closeAddModalBtn" aria-label="Close dialog">&times;</button>
+      </div>
+      <form id="addSubjectForm" novalidate>
+        <!-- Subject Name Input -->
+        <div class="form-group">
+          <label for="subjectNameInput" class="form-label">Subject Name <span class="required-star">*</span></label>
+          <input 
+            type="text" 
+            id="subjectNameInput" 
+            class="form-input" 
+            placeholder="e.g., Embedded Systems, DAA, DBMS" 
+            autocomplete="off" 
+            maxlength="60"
+            required
+          >
+          <div class="form-error-msg" id="nameErrorMsg"></div>
+        </div>
+
+        <!-- Attendance Numbers Group -->
+        <div class="form-row">
+          <!-- Classes Attended -->
+          <div class="form-group">
+            <label for="attendedInput" class="form-label">Classes Attended <span class="required-star">*</span></label>
+            <div class="counter-input-wrap">
+              <button type="button" class="btn-counter-ctrl" id="modalAttendedMinus" aria-label="Decrease attended by 1">-</button>
+              <input 
+                type="number" 
+                id="attendedInput" 
+                class="form-input counter-input" 
+                value="0" 
+                min="0" 
+                step="1"
+                required
+              >
+              <button type="button" class="btn-counter-ctrl" id="modalAttendedPlus" aria-label="Increase attended by 1">+</button>
+            </div>
+            <div class="form-error-msg" id="attendedErrorMsg"></div>
+          </div>
+
+          <!-- Classes Conducted -->
+          <div class="form-group">
+            <label for="conductedInput" class="form-label">Classes Conducted <span class="required-star">*</span></label>
+            <div class="counter-input-wrap">
+              <button type="button" class="btn-counter-ctrl" id="modalConductedMinus" aria-label="Decrease conducted by 1">-</button>
+              <input 
+                type="number" 
+                id="conductedInput" 
+                class="form-input counter-input" 
+                value="0" 
+                min="0" 
+                step="1"
+                required
+              >
+              <button type="button" class="btn-counter-ctrl" id="modalConductedPlus" aria-label="Increase conducted by 1">+</button>
+            </div>
+            <div class="form-error-msg" id="conductedErrorMsg"></div>
+          </div>
+        </div>
+
+        <div class="form-general-error" id="formGeneralError" role="alert"></div>
+
+        <!-- Modal Actions -->
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" id="cancelAddModalBtn">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="submitSubjectBtn">Add Subject</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Edit Subject Modal -->
+  <div class="modal-backdrop" id="editSubjectModal" role="dialog" aria-modal="true" aria-labelledby="editModalTitle" hidden>
+    <div class="modal-card modal-card-sm">
+      <div class="modal-header">
+        <h3 class="modal-title" id="editModalTitle">Edit Subject Name</h3>
+        <button class="btn-close-modal" id="closeEditModalBtn" aria-label="Close dialog">&times;</button>
+      </div>
+      <form id="editSubjectForm" novalidate>
+        <div class="form-group">
+          <label for="editSubjectNameInput" class="form-label">Subject Name <span class="required-star">*</span></label>
+          <input 
+            type="text" 
+            id="editSubjectNameInput" 
+            class="form-input" 
+            placeholder="e.g., Advanced Database Systems" 
+            autocomplete="off" 
+            maxlength="60"
+            required
+          >
+          <div class="form-error-msg" id="editNameErrorMsg"></div>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" id="cancelEditModalBtn">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="saveEditSubjectBtn">Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Delete Confirmation Modal -->
+  <div class="modal-backdrop" id="deleteModal" role="dialog" aria-modal="true" aria-labelledby="deleteModalTitle" hidden>
+    <div class="modal-card modal-card-sm">
+      <div class="modal-header">
+        <h3 class="modal-title" id="deleteModalTitle">Delete Subject</h3>
+        <button class="btn-close-modal" id="closeDeleteModalBtn" aria-label="Close dialog">&times;</button>
+      </div>
+      <div class="delete-modal-body">
+        <div class="delete-icon-wrap" aria-hidden="true">🗑️</div>
+        <p class="delete-modal-text" id="deleteConfirmText">Are you sure you want to delete this subject?</p>
+        <p class="delete-modal-subtext">This action cannot be undone and will recalculate your overall attendance.</p>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" id="cancelDeleteBtn">Cancel</button>
+        <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
